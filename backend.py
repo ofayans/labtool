@@ -218,7 +218,7 @@ class RHEVM(VirtBackend):
                 sleep(3)
         return vm
 
-    def load_vm(self, name, vm=None):
+    def load_vm(self, name, vm=None, interactive=True):
         if not vm:
             vm = self.get_vm(name)
         vm = self.start(name, vm)
@@ -245,14 +245,18 @@ class RHEVM(VirtBackend):
             show("IP address of the VM is %s" % ip)
             show("FQDN of the VM is %s" % fqdn)
         else:
-            notify('Enter the IP manually.')
-            fqdn = ''
-            last_ip_segment = ''
+            if interactive:
+                notify('Enter the IP manually.')
+                fqdn = ''
+                last_ip_segment = ''
 
-            while not (len(last_ip_segment) > 0 and len(last_ip_segment) < 4):
-                last_ip_segment = raw_input("IP address could not be "
-                "determined. Enter the VM number (no leading zeros):")
-                ip = locals.IP_BASE + last_ip_segment
+                while not (len(last_ip_segment) > 0 and len(last_ip_segment) < 4):
+                    last_ip_segment = raw_input("IP address could not be "
+                    "determined. Enter the VM number (no leading zeros):")
+                    ip = locals.IP_BASE + last_ip_segment
+            else:
+                ip = ''
+                fqdn = ''
 
         # Set the VM's description so that it can be identified in WebAdmin
         if fqdn:
