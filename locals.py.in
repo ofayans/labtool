@@ -30,12 +30,12 @@ USER = os.environ['USER']
 PRIVATE_KEY = '%s/.ssh/id_rsa' % os.environ['HOME']
 
 DEBUG = False
-INVENTORY_FILE = os.path.join(os.environ['HOME'], 'ansible/hosts')
+INVENTORY_FILE = os.path.join(os.environ['HOME'], 'ansible', 'hosts')
 CONFIG_FILE = os.path.join(os.environ['HOME'], 'config.yaml')
 TESTRC_FILE = os.path.join(os.environ['HOME'], 'testrc')
 NUM_VMS = 60
 VM_SUFFIX = '_f23_replica_'
-TEST_DIR = os.environ['USER'] + 'ipatests'
+TEST_DIR = os.path.join(os.environ['USER'], 'ipatests')
 ADMIN_PASSWORD = ''
 DIRMAN_PASSWORD = ''
 
