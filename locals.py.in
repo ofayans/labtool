@@ -16,6 +16,7 @@ TEMPLATE_NAME = ''
 IP_BASE = ''
 BACKEND = ''
 REQUIRE_ROOT = False
+DNS_FORWARDER = ''
 
 # Set to your default LAB
 DEFAULT_LOCATION = 'LAB1'
@@ -29,12 +30,23 @@ USER = os.environ['USER']
 PRIVATE_KEY = '%s/.ssh/id_rsa' % os.environ['HOME']
 
 DEBUG = False
+INVENTORY_FILE = os.path.join(os.environ['HOME'], 'ansible/hosts')
+CONFIG_FILE = os.path.join(os.environ['HOME'], 'config.yaml')
+TESTRC_FILE = os.path.join(os.environ['HOME'], 'testrc')
+NUM_VMS = 60
+VM_SUFFIX = '_f23_replica_'
+TEST_DIR = os.environ['USER'] + 'ipatests'
+ADMIN_PASSWORD = ''
+DIRMAN_PASSWORD = ''
 
 
 def set_locale(lab):
     global URL, USERNAME, PASSWORD, CA_FILE, CLUSTER_NAME, HOST_NAME, DOMAIN
     global NFS_VM, HOST, TEMPLATE_NAME, IP_BASE, BACKEND, REQUIRE_ROOT
-    global SNAPSHOT_NAME, KERBEROS
+    global SNAPSHOT_NAME, KERBEROS, ADMIN_PASSWORD, DIRMAN_PASSWORD, TEST_DIR
+    global INVENTORY_FILE, CONFIG_FILE, TESTRC_FILE, NUM_VMS, VM_SUFFIX
+    global DNS_FORWARDER
+
 
     if lab == 'LAB1':
         URL = 'https://rhevm.example.com/api'
