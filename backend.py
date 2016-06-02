@@ -84,6 +84,7 @@ class RHEVM(VirtBackend):
         show.tab()
 
         self.shutdown(name)
+        snapshot_name = "%s_%s" % (locals.SNAPSHOT_NAME,  name)
 
         for snap in self.get_vm(name).snapshots.list():
             if snap.get_description() != 'Active VM':
@@ -97,7 +98,7 @@ class RHEVM(VirtBackend):
         show.untab()
 
         try:
-            snapshot = params.Snapshot(description=locals.SNAPSHOT_NAME,
+            snapshot = params.Snapshot(description=snapshot_name,
                                        vm=self.get_vm(name))
             self.get_vm(name).snapshots.add(snapshot)
             show("Creating a Snapshot")
@@ -107,22 +108,23 @@ class RHEVM(VirtBackend):
         except Exception as e:
             show('Failed to Create a Snapshot:\n%s' % str(e))
 
-        if self.get_snapshot(name, locals.SNAPSHOT_NAME):
-            show("Snapshot created: %s" % locals.SNAPSHOT_NAME)
+        if self.get_snapshot(name, snapshot_name):
+            show("Snapshot created: %s" % snapshot_name)
 
         sleep(15)
         show.untab()
 
     def revert_to_snapshot(self, name):
         show.tab()
+        snapshot_name = "%s_%s" % (locals.SNAPSHOT_NAME, name)
 
         self.stop(name)
 
-        show('Restoring the snapshot: %s' % locals.SNAPSHOT_NAME)
-        snapshot = self.get_snapshot(name, locals.SNAPSHOT_NAME)
+        show('Restoring the snapshot: %s' % snapshot_name)
+        snapshot = self.get_snapshot(name, snapshot_name)
         if not snapshot:
             raise ValueError("Snapshot %s does not exist"
-                             % locals.SNAPSHOT_NAME)
+                             % snapshot_name)
 
         snapshot.restore()
 

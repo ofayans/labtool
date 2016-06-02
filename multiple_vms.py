@@ -9,7 +9,8 @@ import locals
 parser = ArgumentParser()
 parser.add_argument('--action', '-a', dest='action', type=str,
                     default='create', help="""Possible values are: create,
- start, stop, delete, all, inventory""")
+ start, stop, delete, all, inventory, snapshot, revert, delete_invalid,
+ restart_invalid""")
 parser.add_argument('--prefix', '-p', dest='prefix', type=str,
                     help='Prefix, that all VM names will have')
 parser.add_argument('--suffix', '-s', dest='suffix', type=str,
@@ -59,6 +60,16 @@ def create_vms(prefix, suffix, template_name, count):
     return vm_list
 
 
+def make_snapshots(hosts):
+    for host in hosts:
+        api.make_snapshot(host.name)
+
+
+def revert_to_snapshots(hosts):
+    for host in hosts:
+        api.revert_to_snapshot(host.name)
+
+
 def start_vms(hosts):
     hosts_done = []
     for host in hosts:
@@ -76,6 +87,22 @@ def stop_vms(hosts):
     for host in hosts:
         host.stop()
 
+
+def restart_invalid_hosts(hosts):
+    """Restarts those of the provided hosts that do not have
+    fqdn or ip exported"""
+    for host in hosts:
+        if not (host.fqdn and host.ip):
+            api.stop(host.name)
+            api.start(host.name, wait=False)
+
+
+def delete_invalid_hosts(hosts):
+    """Deletes those of the provided hosts that do not have
+    fqdn or ip exported"""
+    for host in hosts:
+        if not (host.fqdn and host.ip):
+            api.remove_vm(host.name)
 
 def prepare_inventory(hostlist, inventory_file, config_file, testrc_file):
     result = []
@@ -128,15 +155,16 @@ if __name__ == '__main__':
     elif options.action == 'start':
         vm_list = get_vm_list(prefix, vm_suffix, num_replicas)
         start_vms(vm_list)
+    elif options.action == 'snapshot':
+        vm_list = get_vm_list(prefix, vm_suffix, num_replicas)
+        make_snapshots(vm_list)
+    elif options.action == 'revert':
+        vm_list = get_vm_list(prefix, vm_suffix, num_replicas)
+        revert_to_snapshots(vm_list)
     elif options.action == 'all':
         vm_list = create_vms(prefix, vm_suffix,
                              template_name, count=num_replicas)
         vm_list_started = start_vms(vm_list)
-        # A workaround for current ABCDE lab issue when a freshly started VM
-        # does not display FQDN untill it is once more restarted
-        stop_vms(vm_list_started)
-        start_vms(vm_list)
-        # End of workaround
         host_list = load_vms(vm_list_started)
         prepare_inventory(host_list, locals.INVENTORY_FILE,
                           locals.CONFIG_FILE, locals.TESTRC_FILE)
@@ -151,3 +179,11 @@ if __name__ == '__main__':
         host_list = load_vms(vm_list)
         prepare_inventory(host_list, locals.INVENTORY_FILE,
                           locals.CONFIG_FILE, locals.TESTRC_FILE)
+    elif options.action == 'delete_invalid':
+        vm_list = get_vm_list(prefix, vm_suffix, num_replicas)
+        hosts = load_vms(vm_list)
+        delete_invalid_hosts(hosts)
+    elif options.action == 'restart_invalid':
+        vm_list = get_vm_list(prefix, vm_suffix, num_replicas)
+        hosts = load_vms(vm_list)
+        restart_invalid_hosts(hosts)
