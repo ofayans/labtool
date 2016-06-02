@@ -8,8 +8,8 @@ import locals
 
 parser = ArgumentParser()
 parser.add_argument('--action', '-a', dest='action', type=str,
-                    default='create', help='Possible values are: create, start, \
-                    stop, delete, all, inventory')
+                    default='create', help="""Possible values are: create,
+ start, stop, delete, all, inventory""")
 parser.add_argument('--prefix', '-p', dest='prefix', type=str,
                     help='Prefix, that all VM names will have')
 parser.add_argument('--suffix', '-s', dest='suffix', type=str,
@@ -18,8 +18,8 @@ parser.add_argument('--template-name', '-t', dest='template', type=str,
                     help='Template name')
 
 parser.add_argument('--lab', '-l', type=str, dest='lab', default='abcd',
-                    help='RHEVM lab to connect to. Possible values are: \
-                    abcd, brno')
+                    help="RHEVM lab to connect to. Possible values are: \
+                    %s" % (", ".join(locals.POSSIBLE_LABS)))
 parser.add_argument('--num_vms', '-n', type=int,
                     dest='num_vms', help='Number of VMs to process')
 
@@ -80,7 +80,9 @@ def stop_vms(hosts):
 def prepare_inventory(hostlist, inventory_file, config_file, testrc_file):
     result = []
     for host in hostlist:
-        result.append({'fqdn': host.fqdn, 'ip': host.ip})
+        if host.fqdn and host.ip:
+            result.append({'fqdn': host.fqdn, 'ip': host.ip})
+
     with open(inventory_file, 'w') as invfile:
         hostnames = []
         for host in result:
@@ -90,28 +92,24 @@ def prepare_inventory(hostlist, inventory_file, config_file, testrc_file):
         invfile.write(restext)
 
     domainname = result[0]['fqdn'][:-1].replace('vm', 'dom')
-    ipadomain = ipadomainskel % domainname
-    cleanresult = []
-    for host in result:
-        if host['fqdn'] and host['ip']:
-            cleanresult.append(host)
-    hosts = masterskel % (cleanresult[0]['fqdn'],
-                          cleanresult[0]['fqdn'][:-1],
-                          cleanresult[0]['ip'])
-    testrc_hosts = [cleanresult[0]['fqdn'][:-1]]
-    for host in cleanresult[1:]:
-        hosts += replicaskel % (host['fqdn'],
-                                host['fqdn'][:-1],
-                                host['ip'])
+    ipadomain = locals.IPADOMAINSKEL % domainname
+    hosts = locals.MASTERSKEL % (result[0]['fqdn'],
+                                 result[0]['fqdn'][:-1],
+                                 result[0]['ip'])
+    testrc_hosts = [result[0]['fqdn'][:-1]]
+    for host in result[1:]:
+        hosts += locals.REPLICASKEL % (host['fqdn'],
+                                       host['fqdn'][:-1],
+                                       host['ip'])
         testrc_hosts.append(host['fqdn'][:-1])
 
     with open(config_file, 'w') as configfile:
-        resulttext = header + ipadomain + hosts
+        resulttext = locals.CONFIG_HEADER + ipadomain + hosts
         configfile.write(resulttext)
     with open(testrc_file, 'w') as testrcfile:
-        testrcfile.write(testrcskel % (testrc_hosts[0],
-                                       " ".join(testrc_hosts[1:]),
-                                       config_file))
+        testrcfile.write(locals.TESTRCSKEL % (testrc_hosts[0],
+                                              " ".join(testrc_hosts[1:]),
+                                              config_file))
 
 
 if __name__ == '__main__':
@@ -120,42 +118,6 @@ if __name__ == '__main__':
     vm_suffix = options.suffix or locals.VM_SUFFIX
     locals.set_locale(options.lab)
 
-    header = "admin_name: admin\n\
-admin_password: %s\n\
-debug: true\n\
-dirman_dn: cn=Directory Manager\n\
-dirman_password: %s\n\
-dns_forwarder: %s\n\
-domain_level: 1\n\
-root_ssh_key_filename: %s\n\
-test_dir: %s\n\
-domains:\n" % (locals.ADMIN_PASSWORD,
-               locals.DIRMAN_PASSWORD,
-               locals.DNS_FORWARDER,
-               locals.PRIVATE_KEY,
-               locals.TEST_DIR)
-
-    ipadomainskel = "- name: %s\n\
-  type: IPA\n\
-  hosts:\n"
-
-    masterskel = "  - name: %s\n\
-    external_hostname: %s\n\
-    ip: %s\n\
-    role: master\n"
-
-    replicaskel = "  - name: %s\n\
-    external_hostname: %s\n\
-    ip: %s\n\
-    role: replica\n"
-
-    testrcskel = "export MASTER=%s\n\
-export REPLICA='%s'\n\
-export IPATEST_YAML_CONFIG=%s"
-
-    if options.lab == 'brno':
-        raise NotImplementedError('Brno lab is not tested, most probabaly the\
-                                   script would not work. ')
     api = RHEVM(url=locals.URL, cluster_name=locals.CLUSTER_NAME,
                 ca_file=locals.CA_FILE, username=locals.USERNAME,
                 password=locals.PASSWORD, kerberos=locals.KERBEROS)

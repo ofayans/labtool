@@ -38,6 +38,46 @@ VM_SUFFIX = '_f23_replica_'
 TEST_DIR = os.path.join(os.environ['USER'], 'ipatests')
 ADMIN_PASSWORD = ''
 DIRMAN_PASSWORD = ''
+SNAPSHOT_NAME = ''
+POSSIBLE_LABS = []
+DNS_FORWARDER = ''
+
+CONFIG_HEADER = """admin_name: admin
+admin_password: %(adminpass)s
+debug: true
+dirman_dn: cn=Directory Manager
+dirman_password: %(dirmanpass)s
+dns_forwarder: %(forwarder)s
+domain_level: 1
+root_ssh_key_filename: %(privkey)s
+test_dir: %(testdir)s
+domains:
+""" % {'adminpass': ADMIN_PASSWORD,
+       'dirmanpass': DIRMAN_PASSWORD,
+       'forwarder': DNS_FORWARDER,
+       'privkey': PRIVATE_KEY,
+       'testdir': TEST_DIR}
+
+IPADOMAINSKEL = """- name: %s
+  type: IPA
+  hosts:
+"""
+
+MASTERSKEL = """  - name: %s
+    external_hostname: %s
+    ip: %s
+    role: master
+"""
+
+REPLICASKEL = """  - name: %s
+    external_hostname: %s
+    ip: %s
+    role: replica
+"""
+
+TESTRCSKEL= """export MASTER=%s
+export REPLICA='%s'
+export IPATEST_YAML_CONFIG=%s"""
 
 
 def set_locale(lab):
