@@ -220,15 +220,20 @@ class RHEVM(VirtBackend):
                 sleep(3)
         return vm
 
-    def load_vm(self, name, vm=None, interactive=True):
+    def load_vm(self, name, vm=None, start=True, interactive=True, update=True):
         if not vm:
             vm = self.get_vm(name)
-        vm = self.start(name, vm)
+        if start:
+            vm = self.start(name, vm)
 
         # Obtain the IP address. It can take a while for the guest agent
         # to start, so we wait 2 minutes here before giving up.
         show('Waiting to obtain IP address')
         show('Press CTRL+C to interrupt and enter manually.')
+        if start:
+            max_counter = 120
+        else:
+            max_counter = 2
         counter = 0
         ip = self.get_ip(vm)
         try:
@@ -236,13 +241,13 @@ class RHEVM(VirtBackend):
                 vm = self.get_vm(name)
                 ip = self.get_ip(vm)
                 counter = counter + 1
-                if counter > 120:
+                if counter > max_counter:
                     break
                 sleep(3)
         except KeyboardInterrupt:
             counter = 100000
 
-        if counter <= 120:
+        if counter <= max_counter:
             fqdn = vm.get_guest_info().fqdn
             show("IP address of the VM is %s" % ip)
             show("FQDN of the VM is %s" % fqdn)
@@ -261,7 +266,7 @@ class RHEVM(VirtBackend):
                 fqdn = ''
 
         # Set the VM's description so that it can be identified in WebAdmin
-        if fqdn:
+        if fqdn and update:
             vm.set_description(fqdn)
             vm.update()
             show("Description set to %s" % fqdn)
