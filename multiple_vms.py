@@ -30,7 +30,7 @@ options = parser.parse_args()
 def load_vms(vm_list):
     result = []
     for vm in vm_list:
-        result.append(api.load_vm(vm.name, vm, interactive=False))
+        result.append(api.load_vm(vm.name, vm, start=False, interactive=False, update=False))
     return result
 
 
@@ -38,8 +38,12 @@ def get_vm_list(prefix, suffix, count):
     result = []
     for i in range(1, count + 1):
         vm_name = "%s%s%i" % (prefix, suffix, i)
-        vm = api.get_vm(vm_name)
-        result.append(vm)
+        try:
+            vm = api.get_vm(vm_name)
+            result.append(vm)
+        except ValueError:
+        # The machine was manually deleted
+            continue
     return result
 
 
@@ -107,9 +111,8 @@ def delete_invalid_hosts(hosts):
 def prepare_inventory(hostlist, inventory_file, config_file, testrc_file):
     result = []
     for host in hostlist:
-        if host.fqdn and host.ip:
+        if host.hostname and host.ip:
             result.append({'fqdn': host.fqdn, 'ip': host.ip})
-
     with open(inventory_file, 'w') as invfile:
         hostnames = []
         for host in result:
