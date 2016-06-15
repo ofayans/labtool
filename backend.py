@@ -93,7 +93,7 @@ class RHEVM(VirtBackend):
 
         while len(self.get_vm(name).snapshots.list()) > 1:
             show("Waiting for the deletion to complete.")
-            sleep(5)
+            sleep(15)
 
         show.untab()
 
@@ -104,14 +104,13 @@ class RHEVM(VirtBackend):
             show("Creating a Snapshot")
             show('Waiting for Snapshot creation to finish')
             while self.get_vm(name).status.state == 'image_locked':
-                sleep(5)
+                sleep(15)
         except Exception as e:
             show('Failed to Create a Snapshot:\n%s' % str(e))
 
         if self.get_snapshot(name, snapshot_name):
             show("Snapshot created: %s" % snapshot_name)
 
-        sleep(15)
         show.untab()
 
     def revert_to_snapshot(self, name):
@@ -131,7 +130,7 @@ class RHEVM(VirtBackend):
         # VM automatically shuts down after creation
         show('Waiting for VM to reach Down status')
         while self.get_vm(name).status.state != 'down':
-            sleep(1)
+            sleep(15)
         show.untab()
         return self.load_vm(name)
 
@@ -204,7 +203,7 @@ class RHEVM(VirtBackend):
         show('Waiting for VM to reach Down status')
         while self.get_vm_state(name, vm) != 'down':
             vm = self.get_vm(name)
-            sleep(2)
+            sleep(15)
         show.untab()
         return vm
 
@@ -217,7 +216,7 @@ class RHEVM(VirtBackend):
 
             while wait and self.get_vm_state(name, vm) != 'up':
                 vm = self.get_vm(name)
-                sleep(3)
+                sleep(15)
         return vm
 
     def load_vm(self, name, vm=None, start=True, interactive=True, update=True):
@@ -243,7 +242,7 @@ class RHEVM(VirtBackend):
                 counter = counter + 1
                 if counter > max_counter:
                     break
-                sleep(3)
+                sleep(15)
         except KeyboardInterrupt:
             counter = 100000
 
@@ -290,14 +289,14 @@ class RHEVM(VirtBackend):
         show('Waiting for VM to reach Down status')
         while self.get_vm_state(name, vm) != 'down':
             vm = self.get_vm(name)
-            sleep(1)
+            sleep(15)
 
         if self.get_vm_state(name, vm) != 'up':
             show('Starting VM')
             vm.start()
             show('Waiting for VM to reach Up status')
             while self.get_vm_state(name) != 'up':
-                sleep(1)
+                sleep(15)
 
         show('Waiting for all the services to start')
         sleep(60)
@@ -320,7 +319,7 @@ class RHEVM(VirtBackend):
 
             show('Waiting for VM %s to reach Down status' % name)
             while self.get_vm_state(name) != 'down':
-                sleep(1)
+                sleep(5)
 
             show('VM %s stopped successfully' % name)
         else:
@@ -331,7 +330,7 @@ class RHEVM(VirtBackend):
 
         show('Waiting for VM %s to reach Down status' % name)
         while self.get_vm_state(name) != 'down':
-            sleep(1)
+            sleep(5)
 
         show('VM %s stopped successfully' % name)
 
@@ -353,7 +352,7 @@ class RHEVM(VirtBackend):
             pass
 
         while self.get_vm_state(name) != 'down':
-            sleep(1)
+            sleep(10)
 
         vm.delete()
         show('{name} was removed.'.format(name=name))
