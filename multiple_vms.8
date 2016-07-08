@@ -1,0 +1,70 @@
+.TH MULTIPLE_VMS 8 "Manipulate a set of virtual machiness at once" \" -*- nroff -*-
+.SH NAME
+multiple_vms.py \(em manipulate multiple vms
+.SH SYNOPSIS
+.B multiple_vms.py
+.RB [ \-a | \-\-action 
+ACTION ]
+.RB [ \-p | \-\-prefix
+NAME PREFIX ]
+.RB [ \-s | \-\-suffix
+NAME SUFFIX ]
+.RB [ \-t | \-\-template\-name
+TEMPLATE NAME ]
+.RB [ \-l | \-\-lab
+RHEVM LAB NAME ]
+.RB [ \-n | \-\-num\-vms
+NUMBER OF VMS TO MANIPULATE ]
+.RB [ \-i | \-\-initial\-vm\-num
+NUMBER OF FIRST VM ]
+.SH DESCRIPTION
+multiple_vms.py allows you to create, start, stop, remove, make snapshots of a
+given number of VMs in a RHEVM lab as well as automatically prepare configuration
+files for ipa integration tests based on the hostnames/ips of the started VMs.
+To use this utility navigate to the labtool folder (that contains the
+multiple_vms.py, backend.py and a  number of other auxilliary files). Copy
+local.py.in to locals.py and exit it. Modify lab-specific info, like path to
+cert file, username/password, and whether to use kerberos. Define some
+defaults, like TEMPLATE_NAME or DEFAULT_LOCATION (which is in fact default lab
+name)
+
+.SH OPTIONS
+.TP
+.BR \-a ", " \-\-action
+Action to perform could be one of the following: create, start, stop, delete, all,
+inventory, snapshot, revert, delete_invalid, restart_invalid.
+.TP
+.BR \-p ", " \-\-prefix
+Prefix all VM names will have. Unless specified, the USER environmental
+variable will be used
+.TP
+.BR \-s ", " \-\-suffix
+Overrides the default VM name suffix defined in locals.py. The vm_name
+has the following format: ${vm_prefix}_${vm_suffix}_${counter}
+.TP
+.BR \-t ", " \-\-template\-name
+Overrides the default template name defined in locals.py
+.TP
+.BR \-l ". " \-\-lab
+Overrides the DEFAULT_LOCATION defeined in the locals.py
+.TP
+.BR \-n ", " \-\-num\-vms
+Number of VMs to process. If the -i parameter is set, -n turns into the number
+of the last VM to be processed (AKA range end)
+.TP
+.BR \-i ", " \-\-initial\-vm\-num
+Optional parameter. Number of the first VM to proceed (AKA range start)
+
+.SH Examples
+.PP
+multiple_vms.py -a create -n 5
+.RS 4
+Creates 5 vms (from 1 to 5) and leaves them in the stopped state
+.RE
+.PP
+multiple_vms.py -a all -i 3 -n 6
+.RS 4
+Creates 4 vms (from 3 to 6), starts them and creates config.yaml 
+and testrc in your home folder. The first created vm is listed as master and the 
+rest of them as replicas in both config files
+.RE
